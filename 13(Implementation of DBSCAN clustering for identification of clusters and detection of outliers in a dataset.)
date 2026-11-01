@@ -1,0 +1,59 @@
+%pip install numpy pandas matplotlib scikit-learn
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_moons
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import DBSCAN
+
+# Create curved clusters
+X, _ = make_moons(n_samples=200, noise=0.05, random_state=42)
+
+# Add scattered points to demonstrate noise detection
+rng = np.random.default_rng(42)
+extra_points = rng.uniform(low=[-1.5, -1.0], high=[2.5, 1.5], size=(20, 2))
+X = np.vstack([X, extra_points])
+
+# Scale the features
+X_scaled = StandardScaler().fit_transform(X)
+
+# Apply DBSCAN
+model = DBSCAN(eps=0.25, min_samples=5)
+labels = model.fit_predict(X_scaled)
+
+# Count clusters and noise points
+cluster_count = len(set(labels) - {-1})
+noise_count = np.sum(labels == -1)
+print("Number of clusters:", cluster_count)
+print("Number of noise points:", noise_count)
+
+# Identify core, border, and noise points
+core_mask = np.zeros(len(X), dtype=bool)
+core_mask[model.core_sample_indices_] = True
+noise_mask = labels == -1
+border_mask = (~core_mask) & (~noise_mask)
+
+print("Core points:", np.sum(core_mask))
+print("Border points:", np.sum(border_mask))
+
+# Display sample cluster assignments
+results = pd.DataFrame(X, columns=["Feature 1", "Feature 2"])
+results["Cluster"] = labels
+print("\nFIRST TEN ROWS")
+print(results.head(10))
+
+# Plot each cluster and mark noise separately
+for label in sorted(set(labels)):
+    points = X_scaled[labels == label]
+    if label == -1:
+        plt.scatter(points[:, 0], points[:, 1], color="black",
+                    marker="x", label="Noise")
+    else:
+        plt.scatter(points[:, 0], points[:, 1], label=f"Cluster {label}")
+
+plt.xlabel("Scaled Feature 1")
+plt.ylabel("Scaled Feature 2")
+plt.title("DBSCAN Clustering")
+plt.legend()
+plt.show()
