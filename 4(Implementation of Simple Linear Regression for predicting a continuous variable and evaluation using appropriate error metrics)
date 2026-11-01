@@ -1,0 +1,75 @@
+%pip install numpy pandas matplotlib scikit-learn
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+# Create sample study hours and marks data
+data = {
+    "Hours": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "Marks": [18, 25, 32, 45, 49, 62, 68, 77, 85, 92]
+}
+
+df = pd.DataFrame(data)
+print("DATASET")
+print(df)
+
+# Select the input feature and target
+X = df[["Hours"]]
+y = df["Marks"]
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+# Create and train the model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predict marks for the test data
+y_pred = model.predict(X_test)
+
+# Compare actual and predicted marks
+results = pd.DataFrame({
+    "Hours": X_test["Hours"],
+    "Actual Marks": y_test,
+    "Predicted Marks": y_pred
+})
+
+print("\nPREDICTIONS")
+print(results.round(2))
+
+# Calculate error metrics
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+
+print("\nMAE:", round(mae, 4))
+print("MSE:", round(mse, 4))
+print("RMSE:", round(rmse, 4))
+print("R-squared:", round(r2, 4))
+
+# Display the slope and intercept
+print("\nSlope:", round(model.coef_[0], 4))
+print("Intercept:", round(model.intercept_, 4))
+
+# Predict marks for a new study duration
+new_data = pd.DataFrame({"Hours": [6.5]})
+new_prediction = model.predict(new_data)
+print("\nPredicted marks for 6.5 hours:", round(new_prediction[0], 2))
+
+# Plot the training data, test data, and regression line
+plt.scatter(X_train["Hours"], y_train, color="blue", label="Training data")
+plt.scatter(X_test["Hours"], y_test, color="green", label="Test data")
+plt.plot(df["Hours"], model.predict(X), color="red", label="Regression line")
+plt.xlabel("Study Hours per Day")
+plt.ylabel("Marks")
+plt.title("Simple Linear Regression")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
