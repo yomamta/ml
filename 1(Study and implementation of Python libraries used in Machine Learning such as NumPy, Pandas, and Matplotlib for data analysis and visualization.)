@@ -1,0 +1,81 @@
+%pip install numpy pandas matplotlib
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Create a NumPy array
+marks = np.array([50, 60, 65, 80, 90])
+
+# Display array details
+print("NUMPY OPERATIONS")
+print("Marks:", marks)
+print("Number of dimensions:", marks.ndim)
+print("Array shape:", marks.shape)
+print("Number of elements:", marks.size)
+
+# Calculate basic statistics
+print("Mean:", np.mean(marks))
+print("Median:", np.median(marks))
+print("Maximum:", np.max(marks))
+print("Minimum:", np.min(marks))
+
+# Add 5 to each mark
+print("Marks after adding 5:", marks + 5)
+
+# Create student data
+data = {
+    "Student": ["A", "B", "C", "D", "E"],
+    "Study_Hours": [1, 2, 3, 4, 5],
+    "Marks": marks
+}
+
+# Create a DataFrame
+df = pd.DataFrame(data)
+
+# Display the complete table
+print("\nCOMPLETE DATAFRAME")
+print(df)
+
+# Display the first three rows
+print("\nFIRST THREE ROWS")
+print(df.head(3))
+
+# Display column details and data types
+print("\nDATAFRAME INFORMATION")
+df.info()
+
+# Display statistical summary
+print("\nSTATISTICAL SUMMARY")
+print(df.describe())
+
+# Count missing values
+print("\nMISSING VALUES IN EACH COLUMN")
+print(df.isnull().sum())
+
+# Filter students scoring at least 70
+print("\nSTUDENTS SCORING AT LEAST 70")
+print(df[df["Marks"] >= 70])
+
+# Create a figure
+plt.figure(figsize=(10, 4))
+
+# Draw a bar chart of student marks
+plt.subplot(1, 2, 1)
+plt.bar(df["Student"], df["Marks"], color="skyblue")
+plt.title("Student Marks")
+plt.xlabel("Student")
+plt.ylabel("Marks")
+plt.ylim(0, 100)
+
+# Draw a scatter plot of study hours and marks
+plt.subplot(1, 2, 2)
+plt.scatter(df["Study_Hours"], df["Marks"], color="green")
+plt.title("Study Hours vs Marks")
+plt.xlabel("Study Hours per Day")
+plt.ylabel("Marks")
+plt.grid(True, alpha=0.3)
+
+# Adjust spacing and display graphs
+plt.tight_layout()
+plt.show()
