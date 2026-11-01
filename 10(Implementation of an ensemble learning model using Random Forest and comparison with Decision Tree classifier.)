@@ -1,1 +1,65 @@
+%pip install pandas matplotlib scikit-learn
 
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Load the Iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target
+
+# Use the same data split for both models
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42, stratify=y
+)
+
+# Create a decision tree and a random forest
+models = {
+    "Decision Tree": DecisionTreeClassifier(random_state=42),
+    "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)
+}
+
+results = []
+
+# Train and evaluate both models
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    train_pred = model.predict(X_train)
+    test_pred = model.predict(X_test)
+
+    train_accuracy = accuracy_score(y_train, train_pred)
+    test_accuracy = accuracy_score(y_test, test_pred)
+    results.append([name, train_accuracy, test_accuracy])
+
+    print("\nMODEL:", name)
+    print("Confusion Matrix:")
+    print(confusion_matrix(y_test, test_pred))
+    print("\nClassification Report:")
+    print(classification_report(y_test, test_pred,
+                                target_names=iris.target_names, zero_division=0))
+
+# Display the performance comparison
+results_df = pd.DataFrame(results, columns=["Model", "Training Accuracy", "Test Accuracy"])
+print("\nMODEL COMPARISON")
+print(results_df.round(4).to_string(index=False))
+
+# Display random forest feature importance
+forest = models["Random Forest"]
+importance = pd.DataFrame({
+    "Feature": iris.feature_names,
+    "Importance": forest.feature_importances_
+})
+print("\nFEATURE IMPORTANCE")
+print(importance.sort_values("Importance", ascending=False).to_string(index=False))
+
+# Plot test accuracy for both models
+plt.bar(results_df["Model"], results_df["Test Accuracy"], color=["skyblue", "orange"])
+plt.ylabel("Test Accuracy")
+plt.ylim(0, 1)
+plt.title("Decision Tree vs Random Forest")
+plt.show()
