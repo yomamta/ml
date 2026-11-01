@@ -1,0 +1,58 @@
+%pip install numpy pandas matplotlib scikit-learn
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import make_blobs
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+
+# Create sample data and ignore the generated class labels
+X, _ = make_blobs(n_samples=200, centers=3, cluster_std=0.7, random_state=42)
+
+# Scale the features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Calculate inertia for different cluster counts
+k_values = list(range(1, 11))
+inertias = []
+
+for k in k_values:
+    model = KMeans(n_clusters=k, random_state=42, n_init=10)
+    model.fit(X_scaled)
+    inertias.append(model.inertia_)
+
+# Display the inertia values
+print(pd.DataFrame({"K": k_values, "Inertia": inertias}).round(4))
+
+# Plot the elbow curve
+plt.plot(k_values, inertias, marker="o")
+plt.xlabel("Number of Clusters (K)")
+plt.ylabel("Inertia")
+plt.title("Elbow Method")
+plt.xticks(k_values)
+plt.grid(True, alpha=0.3)
+plt.show()
+
+# Choose K at the elbow; this sample has an elbow near 3
+selected_k = 3
+model = KMeans(n_clusters=selected_k, random_state=42, n_init=10)
+labels = model.fit_predict(X_scaled)
+
+# Display cluster sizes and centers
+print("\nSelected K:", selected_k)
+print("\nCluster sizes:")
+print(pd.Series(labels).value_counts().sort_index())
+print("\nCluster centers in original units:")
+print(scaler.inverse_transform(model.cluster_centers_))
+
+# Plot the clusters and their centers
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], c=labels, cmap="viridis")
+plt.scatter(model.cluster_centers_[:, 0], model.cluster_centers_[:, 1],
+            color="red", marker="X", s=200, label="Centers")
+plt.xlabel("Scaled Feature 1")
+plt.ylabel("Scaled Feature 2")
+plt.title("K-Means Clustering")
+plt.legend()
+plt.show()
