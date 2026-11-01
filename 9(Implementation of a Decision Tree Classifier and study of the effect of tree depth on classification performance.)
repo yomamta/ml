@@ -1,1 +1,70 @@
+%pip install pandas matplotlib scikit-learn
 
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Load the Iris dataset
+iris = load_iris()
+X = iris.data
+y = iris.target
+
+# Keep a separate test set for final evaluation
+X_train_full, X_test, y_train_full, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+# Create a validation set for selecting tree depth
+X_train, X_val, y_train, y_val = train_test_split(
+    X_train_full, y_train_full, test_size=0.25, random_state=42,
+    stratify=y_train_full
+)
+
+# Compare different maximum depths
+depths = [1, 2, 3, 4, 5, 6, 8, 10]
+results = []
+
+for depth in depths:
+    model = DecisionTreeClassifier(max_depth=depth, random_state=42)
+    model.fit(X_train, y_train)
+    train_accuracy = accuracy_score(y_train, model.predict(X_train))
+    val_accuracy = accuracy_score(y_val, model.predict(X_val))
+    results.append([depth, train_accuracy, val_accuracy])
+
+# Display accuracy for each depth
+results_df = pd.DataFrame(results, columns=["Depth", "Training Accuracy", "Validation Accuracy"])
+print(results_df.round(4).to_string(index=False))
+
+# Select depth using validation accuracy
+best_depth = int(results_df.loc[results_df["Validation Accuracy"].idxmax(), "Depth"])
+print("\nSelected maximum depth:", best_depth)
+
+# Train the final model using all training data
+final_model = DecisionTreeClassifier(max_depth=best_depth, random_state=42)
+final_model.fit(X_train_full, y_train_full)
+y_pred = final_model.predict(X_test)
+
+# Evaluate on the test set
+print("\nTest Accuracy:", round(accuracy_score(y_test, y_pred), 4))
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+# Plot the effect of tree depth
+plt.plot(results_df["Depth"], results_df["Training Accuracy"], marker="o", label="Training")
+plt.plot(results_df["Depth"], results_df["Validation Accuracy"], marker="o", label="Validation")
+plt.xlabel("Maximum Tree Depth")
+plt.ylabel("Accuracy")
+plt.title("Effect of Tree Depth")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.show()
+
+# Display the trained decision tree
+plt.figure(figsize=(14, 7))
+plot_tree(final_model, feature_names=iris.feature_names,
+          class_names=list(iris.target_names), filled=True, rounded=True)
+plt.title("Decision Tree")
+plt.show()
