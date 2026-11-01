@@ -1,0 +1,47 @@
+%pip install pandas matplotlib scipy scikit-learn
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.cluster.hierarchy import linkage, dendrogram
+from sklearn.datasets import make_blobs
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import AgglomerativeClustering
+
+# Create sample data without using class labels
+X, _ = make_blobs(n_samples=60, centers=3, cluster_std=0.7, random_state=42)
+
+# Scale the features
+X_scaled = StandardScaler().fit_transform(X)
+
+# Build the hierarchy using Ward linkage
+linkage_matrix = linkage(X_scaled, method="ward")
+
+# Display the dendrogram
+plt.figure(figsize=(12, 5))
+dendrogram(linkage_matrix)
+plt.xlabel("Sample Index")
+plt.ylabel("Linkage Distance")
+plt.title("Hierarchical Clustering Dendrogram")
+plt.tight_layout()
+plt.show()
+
+# Choose three clusters after inspecting this sample's dendrogram
+model = AgglomerativeClustering(n_clusters=3, linkage="ward")
+labels = model.fit_predict(X_scaled)
+
+# Display cluster sizes
+print("CLUSTER SIZES")
+print(pd.Series(labels).value_counts().sort_index())
+
+# Display sample cluster assignments
+results = pd.DataFrame(X, columns=["Feature 1", "Feature 2"])
+results["Cluster"] = labels
+print("\nFIRST TEN ROWS")
+print(results.head(10))
+
+# Plot the resulting clusters
+plt.scatter(X_scaled[:, 0], X_scaled[:, 1], c=labels, cmap="viridis")
+plt.xlabel("Scaled Feature 1")
+plt.ylabel("Scaled Feature 2")
+plt.title("Agglomerative Clustering")
+plt.show()
