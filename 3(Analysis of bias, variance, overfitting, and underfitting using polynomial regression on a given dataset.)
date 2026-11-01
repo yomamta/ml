@@ -1,0 +1,69 @@
+%pip install numpy pandas matplotlib scikit-learn
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+# Create a sample dataset with a curved pattern and noise
+np.random.seed(42)
+X = np.sort(np.random.uniform(-3, 3, 40)).reshape(-1, 1)
+y = 0.5 * X[:, 0] ** 2 + X[:, 0] + 2 + np.random.normal(0, 1, 40)
+
+# Split the dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+# Select polynomial degrees
+degrees = [1, 2, 15]
+results = []
+
+# Create points for drawing smooth curves
+X_curve = np.linspace(X.min(), X.max(), 300).reshape(-1, 1)
+y_true = 0.5 * X_curve[:, 0] ** 2 + X_curve[:, 0] + 2
+
+plt.figure(figsize=(15, 4))
+
+# Train and evaluate each polynomial model
+for i, degree in enumerate(degrees):
+    poly = PolynomialFeatures(degree=degree, include_bias=False)
+    X_train_poly = poly.fit_transform(X_train)
+    X_test_poly = poly.transform(X_test)
+
+    model = LinearRegression()
+    model.fit(X_train_poly, y_train)
+
+    # Predict training and test values
+    train_pred = model.predict(X_train_poly)
+    test_pred = model.predict(X_test_poly)
+
+    # Calculate training and test errors
+    train_mse = mean_squared_error(y_train, train_pred)
+    test_mse = mean_squared_error(y_test, test_pred)
+    results.append([degree, train_mse, test_mse])
+
+    # Predict values for the curve
+    curve_pred = model.predict(poly.transform(X_curve))
+
+    # Plot data and fitted curves
+    plt.subplot(1, 3, i + 1)
+    plt.scatter(X_train[:, 0], y_train, label="Training data")
+    plt.scatter(X_test[:, 0], y_test, label="Test data", marker="x")
+    plt.plot(X_curve[:, 0], y_true, "g--", label="True pattern")
+    plt.plot(X_curve[:, 0], curve_pred, "r", label="Model")
+    plt.title(f"Degree {degree}")
+    plt.xlabel("X")
+    plt.ylabel("y")
+    plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+# Display the error comparison
+results_df = pd.DataFrame(results, columns=["Degree", "Training MSE", "Test MSE"])
+print(results_df.round(4))
+
